@@ -2,34 +2,50 @@ package com.financeiro.financeiroWEB.service;
 
 import java.util.List;
 
+import org.springframework.stereotype.Service;
+
 import com.financeiro.financeiroWEB.domain.enums.CategoryType;
 import com.financeiro.financeiroWEB.domain.model.Category;
+import com.financeiro.financeiroWEB.dto.CategoryCreateRequest;
+import com.financeiro.financeiroWEB.dto.CategoryResponse;
+import com.financeiro.financeiroWEB.mapper.CategoryMapper;
 import com.financeiro.financeiroWEB.repository.CategoryRepository;
 
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
 public class CategoryService {
 
-     private final CategoryRepository categoryRepository = null;
+    private final CategoryRepository categoryRepository;
 
-    public Category criar(Category category){
-        return categoryRepository.save(category);
+    public CategoryResponse criar(CategoryCreateRequest dto) {
+        Category salvo = categoryRepository.save(CategoryMapper.toEntity(dto));
+        return CategoryMapper.toResponse(salvo);
     }
 
-    public List<Category> listarTodas(){
-        return categoryRepository.findAll();
+    public CategoryResponse buscarPorId(Long id) {
+        Category cat = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+        return CategoryMapper.toResponse(cat);
     }
 
-    public List<Category> listarPorTipo(CategoryType tipo) {
-        return categoryRepository.findByTipo(tipo);
+    public List<CategoryResponse> listarTodas() {
+        return categoryRepository.findAll().stream()
+                .map(CategoryMapper::toResponse)
+                .toList();
     }
 
-    public Category buscarPorId(Long id){
-        return categoryRepository.findById(id)
-               .orElseThrow(() -> new RuntimeException("Categoria não encontrada")); 
+    public List<CategoryResponse> listarPorTipo(CategoryType tipo) {
+        return categoryRepository.findByTipo(tipo).stream()
+                .map(CategoryMapper::toResponse)
+                .toList();
     }
-    
 
-         public void deletar(Long id) {
-        Category category = buscarPorId(id);
-        categoryRepository.delete(category);
-               }
+    public void deletar(Long id) {
+        if (!categoryRepository.existsById(id)) {
+            throw new RuntimeException("Categoria não encontrada");
+        }
+        categoryRepository.deleteById(id);
+    }
 }

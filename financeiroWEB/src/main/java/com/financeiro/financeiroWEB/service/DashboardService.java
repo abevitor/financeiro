@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.financeiro.financeiroWEB.domain.enums.TransactionType;
 import com.financeiro.financeiroWEB.domain.model.Transaction;
+import com.financeiro.financeiroWEB.dto.DashboardResponse;
 import com.financeiro.financeiroWEB.repository.TransactionRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -17,20 +18,21 @@ public class DashboardService {
 
     private final TransactionRepository transactionRepository;
 
-    public BigDecimal calcularSaldo(Long userId) {
-        List<Transaction> transacoes = transactionRepository.findByUserId(userId);
+    public DashboardResponse resumo(Long userId) {
+        List<Transaction> list = transactionRepository.findByUserId(userId);
 
-        BigDecimal receitas = transacoes.stream()
+        BigDecimal receitas = list.stream()
                 .filter(t -> t.getTipo() == TransactionType.RECEITA)
                 .map(Transaction::getValor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal despesas = transacoes.stream()
+        BigDecimal despesas = list.stream()
                 .filter(t -> t.getTipo() == TransactionType.DESPESA)
                 .map(Transaction::getValor)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        return receitas.subtract(despesas);
-    }
+        BigDecimal saldo = receitas.subtract(despesas);
 
+        return new DashboardResponse(receitas, despesas, saldo);
+    }
 }
