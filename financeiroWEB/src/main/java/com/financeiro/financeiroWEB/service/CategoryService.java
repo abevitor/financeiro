@@ -8,6 +8,7 @@ import com.financeiro.financeiroWEB.domain.enums.CategoryType;
 import com.financeiro.financeiroWEB.domain.model.Category;
 import com.financeiro.financeiroWEB.dto.CategoryCreateRequest;
 import com.financeiro.financeiroWEB.dto.CategoryResponse;
+import com.financeiro.financeiroWEB.exception.ResourceNotFoundException;
 import com.financeiro.financeiroWEB.mapper.CategoryMapper;
 import com.financeiro.financeiroWEB.repository.CategoryRepository;
 
@@ -26,7 +27,7 @@ public class CategoryService {
 
     public CategoryResponse buscarPorId(Long id) {
         Category cat = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Categoria não encontrada"));
+                .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada"));
         return CategoryMapper.toResponse(cat);
     }
 
@@ -44,7 +45,7 @@ public class CategoryService {
 
     public void deletar(Long id) {
         if (!categoryRepository.existsById(id)) {
-            throw new RuntimeException("Categoria não encontrada");
+            throw new ResourceNotFoundException("Categoria não encontrada");
         }
         categoryRepository.deleteById(id);
     }

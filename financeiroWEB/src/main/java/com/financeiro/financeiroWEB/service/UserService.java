@@ -2,12 +2,15 @@ package com.financeiro.financeiroWEB.service;
 
 import java.util.List;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.financeiro.financeiroWEB.domain.model.User;
 import com.financeiro.financeiroWEB.dto.UserCreateRequest;
 import com.financeiro.financeiroWEB.dto.UserResponse;
+import com.financeiro.financeiroWEB.exception.EmailAlreadyExistsException;
+import com.financeiro.financeiroWEB.exception.ResourceNotFoundException;
 import com.financeiro.financeiroWEB.mapper.UserMapper;
-import com.financeiro.financeiroWEB.domain.model.User;
 import com.financeiro.financeiroWEB.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -17,18 +20,25 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public UserResponse criar(UserCreateRequest dto) {
         if (userRepository.existsByEmail(dto.email())) {
-            throw new RuntimeException("Email já cadastrado");
+            throw new EmailAlreadyExistsException("Email já cadastrado");
         }
-        User salvo = userRepository.save(UserMapper.toEntity(dto));
+
+        User user = UserMapper.toEntity(dto);
+
+        // 🔐 HASH da senha antes de salvar
+        user.setSenha(passwordEncoder.encode(dto.senha()));
+
+        User salvo = userRepository.save(user);
         return UserMapper.toResponse(salvo);
     }
 
     public UserResponse buscarPorId(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
         return UserMapper.toResponse(user);
     }
 
@@ -40,7 +50,7 @@ public class UserService {
 
     public void deletar(Long id) {
         if (!userRepository.existsById(id)) {
-            throw new RuntimeException("Usuário não encontrado");
+            throw new ResourceNotFoundException("Usuário não encontrado");
         }
         userRepository.deleteById(id);
     }
