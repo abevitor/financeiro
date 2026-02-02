@@ -1,6 +1,5 @@
 package com.financeiro.financeiroWEB.Controller;
 
-
 import java.time.LocalDate;
 import java.util.List;
 
@@ -21,25 +20,26 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class TransactionController {
 
-     private final TransactionService transactionService;
+    private final TransactionService transactionService;
 
     @PostMapping
     public ResponseEntity<TransactionResponse> criar(@Valid @RequestBody TransactionCreateRequest dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(transactionService.criar(dto));
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<TransactionResponse>> listarPorUsuario(@PathVariable Long userId) {
-        return ResponseEntity.ok(transactionService.listarPorUsuario(userId));
+    // ✅ agora lista do usuário autenticado (sem userId)
+    @GetMapping
+    public ResponseEntity<List<TransactionResponse>> listarMinhas() {
+        return ResponseEntity.ok(transactionService.listarMinhas());
     }
 
-    @GetMapping("/user/{userId}/periodo")
+    // ✅ agora filtra do usuário autenticado (sem userId no path)
+    @GetMapping("/periodo")
     public ResponseEntity<List<TransactionResponse>> listarPorPeriodo(
-            @PathVariable Long userId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim
     ) {
-        return ResponseEntity.ok(transactionService.listarPorPeriodo(userId, inicio, fim));
+        return ResponseEntity.ok(transactionService.listarPorPeriodo(inicio, fim));
     }
 
     @DeleteMapping("/{id}")
@@ -47,5 +47,4 @@ public class TransactionController {
         transactionService.deletar(id);
         return ResponseEntity.noContent().build();
     }
-    
 }

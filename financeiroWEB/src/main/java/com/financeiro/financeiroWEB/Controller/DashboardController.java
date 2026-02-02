@@ -15,9 +15,9 @@ public class DashboardController {
 
     private final DashboardService dashboardService;
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<DashboardResponse> resumo(@PathVariable Long userId) {
-        return ResponseEntity.ok(dashboardService.resumo(userId));
+   
+    @GetMapping
+    public ResponseEntity<DashboardResponse> resumo() {
+        return ResponseEntity.ok(dashboardService.resumo());
     }
-    
 }

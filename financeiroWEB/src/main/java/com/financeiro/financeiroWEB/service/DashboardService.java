@@ -7,8 +7,12 @@ import org.springframework.stereotype.Service;
 
 import com.financeiro.financeiroWEB.domain.enums.TransactionType;
 import com.financeiro.financeiroWEB.domain.model.Transaction;
+import com.financeiro.financeiroWEB.domain.model.User;
 import com.financeiro.financeiroWEB.dto.DashboardResponse;
+import com.financeiro.financeiroWEB.exception.ResourceNotFoundException;
 import com.financeiro.financeiroWEB.repository.TransactionRepository;
+import com.financeiro.financeiroWEB.repository.UserRepository;
+import com.financeiro.financeiroWEB.security.util.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,9 +21,22 @@ import lombok.RequiredArgsConstructor;
 public class DashboardService {
 
     private final TransactionRepository transactionRepository;
+    private final UserRepository userRepository;
 
-    public DashboardResponse resumo(Long userId) {
-        List<Transaction> list = transactionRepository.findByUserId(userId);
+    private User getAuthenticatedUser() {
+        String email = SecurityUtils.getAuthenticatedEmail();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+    }
+
+    /**
+     * Resumo do usuário logado.
+     * Substitui resumo(userId).
+     */
+    public DashboardResponse resumo() {
+        User user = getAuthenticatedUser();
+
+        List<Transaction> list = transactionRepository.findByUser(user);
 
         BigDecimal receitas = list.stream()
                 .filter(t -> t.getTipo() == TransactionType.RECEITA)

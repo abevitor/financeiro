@@ -2,20 +2,18 @@ package com.financeiro.financeiroWEB.repository;
 
 import java.time.LocalDate;
 import java.util.List;
-import com.financeiro.financeiroWEB.domain.model.Transaction;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
-@Repository
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.financeiro.financeiroWEB.domain.model.Transaction;
+import com.financeiro.financeiroWEB.domain.model.User;
+
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
 
-    List<Transaction> findByUserId(Long userId);
+    List<Transaction> findByUser(User user);
 
-    List<Transaction> findByUserIdAndDataBetween(
-            Long userId,
-            LocalDate inicio,
-            LocalDate fim
-    );
+    List<Transaction> findByUserAndDataBetween(User user, LocalDate inicio, LocalDate fim);
 }
+
 
 
