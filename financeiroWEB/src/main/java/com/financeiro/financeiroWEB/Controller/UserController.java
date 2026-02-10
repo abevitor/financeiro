@@ -25,11 +25,19 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.criar(dto));
     }
 
+    // ⚠️ este endpoint pode ficar protegido (JWT)
+    @GetMapping("/me")
+    public ResponseEntity<UserResponse> me() {
+        return ResponseEntity.ok(userService.buscarMe());
+    }
+
+    // ⚠️ opcional: você pode remover depois se não quiser expor tudo
     @GetMapping
     public ResponseEntity<List<UserResponse>> listarTodos() {
         return ResponseEntity.ok(userService.listarTodos());
     }
 
+    // ⚠️ este endpoint deixa de ser essencial no mundo JWT
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(userService.buscarPorId(id));

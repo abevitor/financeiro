@@ -15,6 +15,5 @@ public record TransactionCreateRequest(
     @NotNull @Positive BigDecimal valor,
     @NotNull LocalDate data,
     @NotNull TransactionType tipo,
-    @NotNull Long userId,
     @NotNull Long categoryId
 ) {}

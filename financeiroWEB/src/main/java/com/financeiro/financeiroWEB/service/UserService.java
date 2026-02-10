@@ -12,6 +12,7 @@ import com.financeiro.financeiroWEB.exception.EmailAlreadyExistsException;
 import com.financeiro.financeiroWEB.exception.ResourceNotFoundException;
 import com.financeiro.financeiroWEB.mapper.UserMapper;
 import com.financeiro.financeiroWEB.repository.UserRepository;
+import com.financeiro.financeiroWEB.security.util.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
 
@@ -53,5 +54,14 @@ public class UserService {
             throw new ResourceNotFoundException("Usuário não encontrado");
         }
         userRepository.deleteById(id);
+    }
+
+    public UserResponse buscarMe(){
+        String email = SecurityUtils.getAuthenticatedEmail();
+
+        User user = userRepository.findByEmail(email)
+             .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+
+             return UserMapper.toResponse(user);
     }
 }
