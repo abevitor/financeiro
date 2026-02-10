@@ -16,6 +16,8 @@ import com.financeiro.financeiroWEB.repository.CategoryRepository;
 import com.financeiro.financeiroWEB.repository.TransactionRepository;
 import com.financeiro.financeiroWEB.repository.UserRepository;
 import com.financeiro.financeiroWEB.security.util.SecurityUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import lombok.RequiredArgsConstructor;
 
@@ -96,4 +98,18 @@ public class TransactionService {
 
         transactionRepository.deleteById(id);
     }
+
+    public Page<TransactionResponse> listarMinhas(Pageable pageable) {
+    User user = getAuthenticatedUser();
+
+    return transactionRepository.findByUser(user, pageable)
+            .map(TransactionMapper::toResponse);
+}
+
+public Page<TransactionResponse> listarPorPeriodo(LocalDate inicio, LocalDate fim, Pageable pageable) {
+    User user = getAuthenticatedUser();
+
+    return transactionRepository.findByUserAndDataBetween(user, inicio, fim, pageable)
+            .map(TransactionMapper::toResponse);
+}
 }
