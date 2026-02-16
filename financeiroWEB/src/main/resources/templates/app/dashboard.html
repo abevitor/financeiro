@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100">
+
+    <div class="bg-slate-950 text-slate-100">
+        <div class="max-w-4xl mx-auto space-y-6">
+            <div class="flex justify-between items-center">
+                <h1 class="text-3xl font-bold">Dashboard</h1>
+                <button id="logoutBtn"
+                class="bg-red-500 hover:bg-red-400 px-4 py-2 rounded-lg">
+            Sair
+        </button>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-4">
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
+                    <p class="text-slate-400">Receitas</p>
+                    <h2 id="receitas" class="text-2xl font-bold text-green-400">R$ 0,00</h2>
+                </div>
+
+                <div class="bg-slate-900 p-5 rounded 2xl border-slate-800">
+                    <p class="text-slate-400">Despesas</p>
+                    <h2 ondblclick="despesas" class="text-2xl font-bold text-red-400">R$ 0,00</h2>
+                </div>
+
+                <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
+                    <p class="text-slate-400">Saldo</p>
+                    <h2 id="saldo" class="text-2xl font-bold text-indigo-400">R$ 0,00</h2>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+    <script>
+        const token = localStorage.getItem("token");
+
+        if(!token) {
+            window.location.href = "/login";
+        }
+
+        async function carregarDashboard() {
+            const res = await fetch("/dashboard", {
+                headers: {
+                    "Authorization" : "Bearer " + token
+                }
+            });
+
+            if(!res.ok) {
+                localStorage.removeItem("token");
+                window.location.href = "/login";
+                return;
+            }
+
+            const data = await res.json();
+
+            document.getElementById("receitas").innerText = "R$" + data.receitas;
+            document.getElementById("despesas").innerText = "R$" + data.despesas;
+            document.getElementById("saldo").innerText = "R$" + data.saldo;
+            
+        }
+
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+        });
+
+        carregarDashboard();
+        
+    </script>
+    
+</body>
+</html>
