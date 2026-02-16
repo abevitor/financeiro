@@ -1,11 +1,11 @@
 package com.financeiro.financeiroWEB.auth;
 
-import com.financeiro.financeiroWEB.auth.dto.*;
+import com.financeiro.financeiroWEB.auth.dto.LoginRequest;
+import com.financeiro.financeiroWEB.auth.dto.LoginResponse;
 import com.financeiro.financeiroWEB.auth.jwt.JwtService;
-
-import io.jsonwebtoken.Jwts;
 import jakarta.validation.Valid;
-import org.springframework.security.authentication.*;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,14 +22,16 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody @Valid LoginRequest req){
+    public LoginResponse login(@RequestBody @Valid LoginRequest req) {
+
+        // autentica (se der errado, o Spring Security lança exception)
         Authentication auth = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(req.email(), req.senha())
+                new UsernamePasswordAuthenticationToken(req.email(), req.senha())
         );
 
-        String token = jwtService.generateToken(req.email());
+        // token com base no email (subject)
+        String token = jwtService.generateToken(auth.getName());
 
         return new LoginResponse(token, "Bearer", jwtService.getExpiresInSeconds());
     }
-
 }
