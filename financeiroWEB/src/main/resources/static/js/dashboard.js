@@ -1,4 +1,4 @@
-const token = localStorage.getItem("token");
+tconst token = localStorage.getItem("token");
 
 if(!token) window.location.href = "/login";
 
@@ -66,4 +66,59 @@ async function carregarTransacoes() {
     }
 
     const res = await fetch(url, {headers: authHeaders()});
+
+    if(!res.ok) {
+        setMsg("");
+        showError("Não foi possível carregar transações. Verifique se você está logado.");
+        return;
+    }
+
+    const data = await res.json();
+    renderTabela(data);
+    setMsg("");
+}
+
+function renderTabela(pageData) {
+    const tbody = document.getElementById("tbody");
+    tbody.innerHTML = "";
+
+    const content = pageData.content ?? [];
+    if(content.length === 0) {
+        tbody.innerHTML = `
+        <tr class= "border-b border-slate-900">
+         <td class= "py-3 text-slate-400 colspan="5">Nenhuma transação encontrada.</td>
+         </tr>
+         `;
+    }else {
+        for (const t of content) {
+            const tipoColor = t.tipo === "RECEITA" ? "text-emerald-300" : "text-rose-300";
+            
+            const tr = document.createElement("tr");
+            tr.className = "border-b border-slate-900";
+
+            tr.innerHTML = `
+        <td class="py-3 pr-2 text-slate-300">${safeText(t.data)}</td>
+        <td class="py-3 pr-2">${safeText(t.descricao)}</td>
+        <td class="py-3 pr-2 font-semibold ${tipoColor}">${safeText(t.tipo)}</td>
+        <td class="py-3 pr-2 text-right">${moneyBR(t.valor)}</td>
+        <td class="py-3 text-right">
+          <button data-id="${t.id}"
+                  class="btnDel rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 px-3 py-1 text-rose-200">
+            Excluir
+          </button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+        }
+    }
+
+    const totalPages = Number(pageData.totalPages ?? 0);
+    const number = Number(pageData.number ?? 0);
+    document.getElementById("pageInfo").textContent =
+    totalPages === 0
+    ? "Página 0 de 0"
+    : `Página ${number + 1} de ${totalPages}`;
+
+    document.getElementById("prevBtn").disabled = number <= 0;
+    document.getElementById("nextBtn").disabled = totalPages === 0 || number >= totalPages - 1;
 }
