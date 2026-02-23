@@ -121,4 +121,12 @@ function renderTabela(pageData) {
 
     document.getElementById("prevBtn").disabled = number <= 0;
     document.getElementById("nextBtn").disabled = totalPages === 0 || number >= totalPages - 1;
-}
+
+    document.querySelectorAll(".btnDel").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const id = btn.getAttribute("data-id");
+            if(!confirm("Deseja excluir esta transação?")) return;
+            await deletarTransação(id);
+        });
+    });
+}    
