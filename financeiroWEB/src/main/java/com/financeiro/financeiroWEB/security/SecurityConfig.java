@@ -54,14 +54,14 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers(org.springframework.http.HttpMethod.POST, "/users").permitAll()
 
-                // ✅ swagger
+                
                 .requestMatchers(
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html"
                 ).permitAll()
 
-                // ✅ resto protegido
+                
                 .anyRequest().authenticated()
             )
 

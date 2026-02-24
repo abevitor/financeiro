@@ -29,10 +29,7 @@ public class DashboardService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
     }
 
-    /**
-     * Resumo do usuário logado.
-     * Substitui resumo(userId).
-     */
+ 
     public DashboardResponse resumo() {
         User user = getAuthenticatedUser();
 

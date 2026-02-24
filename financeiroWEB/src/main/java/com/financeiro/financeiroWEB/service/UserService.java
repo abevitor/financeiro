@@ -30,7 +30,7 @@ public class UserService {
 
         User user = UserMapper.toEntity(dto);
 
-        // 🔐 HASH da senha antes de salvar
+       
         user.setSenha(passwordEncoder.encode(dto.senha()));
 
         User salvo = userRepository.save(user);

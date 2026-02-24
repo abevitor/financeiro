@@ -44,7 +44,7 @@ public class TransactionService {
         return TransactionMapper.toResponse(salvo);
     }
 
-    // ✅ versão paginada
+   
     public Page<TransactionResponse> listarMinhas(Pageable pageable) {
         User user = getAuthenticatedUser();
 
@@ -52,7 +52,6 @@ public class TransactionService {
                 .map(TransactionMapper::toResponse);
     }
 
-    // ✅ versão paginada
     public Page<TransactionResponse> listarPorPeriodo(LocalDate inicio, LocalDate fim, Pageable pageable) {
         User user = getAuthenticatedUser();
 
