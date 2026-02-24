@@ -130,3 +130,55 @@ function renderTabela(pageData) {
         });
     });
 }    
+
+async function criarTransacao(){
+    clearError();
+    setMsg("");
+
+    const descricao = document.getElementById("descricao").value.trim();
+    const valorStr = document.getElementById("valor").value.trim().replace(",", ".");
+    const data = document.getElementById("data").value;
+    const tipo = document.getElementById("tipo").value;
+    const categoryIdStr = document.getElementById("categoryId").value.trim();
+
+    if(!descricao) return showError("Informe a descrição.");
+    if(!valorStr || isNaN(Number(ValorStr))) return showError("Informe um valor válido (ex:19.90).");
+    if(!data) return showError("Informe a data.");
+     if (!categoryIdStr || isNaN(Number(categoryIdStr))) return showError("Informe um categoryId numérico.");
+
+
+
+const payload = {
+    descricao,
+    valor: Number(ValorStr),
+    data,
+    tipo,
+    userId: 1,
+    categoryId: Number(categoryIdStr)
+};
+
+setMsg("Salvando...");
+
+const res = await fetch("/transactions", {
+    method: "POST",
+    headers: authHeaders({"Content-Type" : "application/json"}),
+    body: JSON.stringify(payload)
+});
+
+if (!res.ok) {
+    setMsg("");
+    showError("Não foi possível criar a transação. Verifique os dados e se a categoria existe.");
+    return;
+}
+
+document.getElementById("descricao").value = "";
+document.getElementById("valor").value = "";
+document.getElementById("data").value = "";
+document.getElementById("tipo").value = "RECEITA";
+
+setMsg("");
+await carregarResumo();
+page = 0;
+await carregarTransacoes();
+
+}
