@@ -182,3 +182,25 @@ page = 0;
 await carregarTransacoes();
 
 }
+
+async function deletarTransacao(id) {
+    clearError();
+    setMsg("Excluindo...");
+    
+    const res = await fetch(`/transactions/${id}`, {
+        method: "DELETE",
+        headers: authHeaders()
+    });
+
+    if(!res.ok) {
+        setMsg("");
+        showError("Não foi possível excluir a transação.");
+        return;
+    }
+
+    setMsg("");
+    await carregarResumo();
+    await carregarTransacoes();
+
+}
+
