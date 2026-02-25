@@ -2,6 +2,8 @@ package com.financeiro.financeiroWEB.Controller;
 
 import java.time.LocalDate;
 
+import com.financeiro.financeiroWEB.dto.TransactionUpdateRequest;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -50,4 +52,14 @@ public class TransactionController {
         transactionService.deletar(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<TransactionResponse> atualizar(
+        @PathVariable Long id,
+        @Valid @RequestBody TransactionUpdateRequest dto
+    ){
+        return ResponseEntity.ok(transactionService.atualizar(id, dto));
+    }
+
+
 }
