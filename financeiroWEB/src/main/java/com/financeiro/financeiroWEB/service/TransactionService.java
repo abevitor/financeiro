@@ -11,6 +11,7 @@ import com.financeiro.financeiroWEB.domain.model.Transaction;
 import com.financeiro.financeiroWEB.domain.model.User;
 import com.financeiro.financeiroWEB.dto.TransactionCreateRequest;
 import com.financeiro.financeiroWEB.dto.TransactionResponse;
+import com.financeiro.financeiroWEB.dto.TransactionUpdateRequest;
 import com.financeiro.financeiroWEB.exception.ResourceNotFoundException;
 import com.financeiro.financeiroWEB.mapper.TransactionMapper;
 import com.financeiro.financeiroWEB.repository.CategoryRepository;
@@ -44,17 +45,14 @@ public class TransactionService {
         return TransactionMapper.toResponse(salvo);
     }
 
-   
     public Page<TransactionResponse> listarMinhas(Pageable pageable) {
         User user = getAuthenticatedUser();
-
         return transactionRepository.findByUser(user, pageable)
                 .map(TransactionMapper::toResponse);
     }
 
     public Page<TransactionResponse> listarPorPeriodo(LocalDate inicio, LocalDate fim, Pageable pageable) {
         User user = getAuthenticatedUser();
-
         return transactionRepository.findByUserAndDataBetween(user, inicio, fim, pageable)
                 .map(TransactionMapper::toResponse);
     }
@@ -70,5 +68,29 @@ public class TransactionService {
         }
 
         transactionRepository.deleteById(id);
+    }
+
+    public TransactionResponse atualizar(Long id, TransactionUpdateRequest dto) {
+        User user = getAuthenticatedUser();
+
+        Transaction tx = transactionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Transação não encontrada"));
+
+        // ✅ segurança: só altera se for do usuário
+        if (tx.getUser() == null || tx.getUser().getId() == null || !tx.getUser().getId().equals(user.getId())) {
+            throw new ResourceNotFoundException("Transação não encontrada");
+        }
+
+        Category category = categoryRepository.findById(dto.categoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada"));
+
+        tx.setDescricao(dto.descricao());
+        tx.setValor(dto.valor());
+        tx.setData(dto.data());
+        tx.setTipo(dto.tipo());
+        tx.setCategory(category);
+
+        Transaction salvo = transactionRepository.save(tx);
+        return TransactionMapper.toResponse(salvo);
     }
 }
