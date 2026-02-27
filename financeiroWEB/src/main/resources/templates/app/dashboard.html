@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0" />
   <title>Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/app-dashboard.js" defer></script>
 </head>
 
 <body class="bg-slate-950 text-slate-100">
@@ -33,6 +34,7 @@
     </header>
 
     <main class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+
       <!-- Resumo -->
       <section class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="rounded-2xl bg-slate-900/60 border border-slate-800 p-5">
@@ -60,7 +62,20 @@
 
         <div id="err" class="hidden mt-2 text-sm text-rose-400"></div>
 
-        <form id="txForm" class="mt-4 grid grid-cols-1 sm:grid-cols-7 gap-3">
+        <!-- Tabs -->
+        <div class="mt-4 flex gap-2">
+          <button type="button" id="tabReceita"
+                  class="px-4 py-2 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-900 text-sm font-semibold">
+            Receita
+          </button>
+          <button type="button" id="tabDespesa"
+                  class="px-4 py-2 rounded-xl border border-slate-800 bg-slate-950 hover:bg-slate-900 text-sm font-semibold">
+            Despesa
+          </button>
+          <input id="tipo" type="hidden" value="RECEITA" />
+        </div>
+
+        <form id="txForm" class="mt-3 grid grid-cols-1 sm:grid-cols-7 gap-3">
           <input id="descricao"
                  class="sm:col-span-2 w-full rounded-xl bg-slate-950 border border-slate-800 p-3"
                  placeholder="Descrição" />
@@ -73,14 +88,8 @@
                  class="sm:col-span-1 w-full rounded-xl bg-slate-950 border border-slate-800 p-3"
                  type="date" />
 
-          <select id="tipo"
-                  class="sm:col-span-1 w-full rounded-xl bg-slate-950 border border-slate-800 p-3">
-            <option value="RECEITA">RECEITA</option>
-            <option value="DESPESA">DESPESA</option>
-          </select>
-
           <select id="categoria"
-                  class="sm:col-span-2 w-full rounded-xl bg-slate-950 border border-slate-800 p-3">
+                  class="sm:col-span-3 w-full rounded-xl bg-slate-950 border border-slate-800 p-3">
             <option value="">Carregando categorias...</option>
           </select>
 
@@ -97,12 +106,8 @@
           <h2 class="text-lg font-semibold">Minhas transações</h2>
 
           <div class="flex items-center gap-2 flex-wrap">
-            <input id="inicio"
-                   class="rounded-xl bg-slate-950 border border-slate-800 p-2 text-sm"
-                   type="date" />
-            <input id="fim"
-                   class="rounded-xl bg-slate-950 border border-slate-800 p-2 text-sm"
-                   type="date" />
+            <input id="inicio" class="rounded-xl bg-slate-950 border border-slate-800 p-2 text-sm" type="date" />
+            <input id="fim" class="rounded-xl bg-slate-950 border border-slate-800 p-2 text-sm" type="date" />
 
             <button id="btnFiltrar"
                     class="rounded-xl bg-slate-800 hover:bg-slate-700 transition px-3 py-2 text-sm font-semibold">
@@ -198,21 +203,15 @@
                placeholder="Descrição" />
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <input id="editValor"
-                 class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3"
-                 placeholder="Valor (ex: 19.90)" />
-          <input id="editData"
-                 class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3"
-                 type="date" />
-          <select id="editTipo"
-                  class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3">
+          <input id="editValor" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3" placeholder="Valor (ex: 19.90)" />
+          <input id="editData" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3" type="date" />
+          <select id="editTipo" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3">
             <option value="RECEITA">RECEITA</option>
             <option value="DESPESA">DESPESA</option>
           </select>
         </div>
 
-        <select id="editCategoria"
-                class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3">
+        <select id="editCategoria" class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3">
           <option value="">Selecione...</option>
         </select>
 
@@ -223,7 +222,5 @@
       </div>
     </div>
   </div>
-
-  <script src="/js/dashboard.js"></script>
 </body>
 </html>

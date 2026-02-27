@@ -1,12 +1,27 @@
-const btn = document.getElementById("btnRegister");
+const form = document.getElementById("registerForm");
 const err = document.getElementById("err");
 
-btn.addEventListener("click", async () => {
+function showError(msg) {
+  err.textContent = msg;
+  err.classList.remove("hidden");
+}
+function clearError() {
+  err.textContent = "";
   err.classList.add("hidden");
+}
 
-  const nome = document.getElementById("nome").value;
-  const email = document.getElementById("email").value;
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  clearError();
+
+  const nome = document.getElementById("nome").value.trim();
+  const email = document.getElementById("email").value.trim();
   const senha = document.getElementById("senha").value;
+
+  if (!nome || !email || !senha) {
+    showError("Preencha todos os campos.");
+    return;
+  }
 
   const res = await fetch("/users", {
     method: "POST",
@@ -15,8 +30,7 @@ btn.addEventListener("click", async () => {
   });
 
   if (!res.ok) {
-    err.innerText = "Erro ao criar conta.";
-    err.classList.remove("hidden");
+    showError("Erro ao criar conta (email pode já existir).");
     return;
   }
 

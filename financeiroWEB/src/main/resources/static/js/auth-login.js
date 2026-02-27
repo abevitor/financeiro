@@ -1,28 +1,39 @@
-const btn = document.getElementById("btnLogin");
+const form = document.getElementById("loginForm");
 const err = document.getElementById("err");
 
-btn.addEventListener("click", async () => {
-    err.classList.add("hidden");
+function showError(msg) {
+  err.textContent = msg;
+  err.classList.remove("hidden");
+}
+function clearError() {
+  err.textContent = "";
+  err.classList.add("hidden");
+}
 
-    const email = document.getElementById("email").value;
-    const senha = document.getElementById("senha").value;
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  clearError();
 
-    const res = await fetch("/auth/login", {
-        method: "POST",
-        headers: {
-            "Content-Type" : "application/json"
-        },
-        body: JSON.stringify({email, senha})
-    });
+  const email = document.getElementById("email").value.trim();
+  const senha = document.getElementById("senha").value;
 
-    if(!res.ok){
-        err.innerText = "Email ou senha inválidos.";
-        err.classList.remove("hidden");
-        return;
-    }
+  if (!email || !senha) {
+    showError("Preencha email e senha.");
+    return;
+  }
 
-    const data = await res.json();
-    localStorage.setItem("token", data.token);
+  const res = await fetch("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, senha })
+  });
 
-    window.location.href = "/app";
+  if (!res.ok) {
+    showError("Email ou senha inválidos.");
+    return;
+  }
+
+  const data = await res.json();
+  localStorage.setItem("token", data.token);
+  window.location.href = "/app";
 });

@@ -34,8 +34,28 @@ let usingPeriodo = false;
 let allCategories = []; // CategoryResponse[]
 const categoriesMap = new Map(); // id -> "nome (tipo)"
 
-// Edição
 let editTxId = null;
+
+// ====== tabs tipo ======
+function setTipo(tipo) {
+  document.getElementById("tipo").value = tipo;
+
+  const tabR = document.getElementById("tabReceita");
+  const tabD = document.getElementById("tabDespesa");
+
+  if (tipo === "RECEITA") {
+    tabR.classList.add("bg-indigo-500/30", "border-indigo-400", "text-indigo-100");
+    tabD.classList.remove("bg-indigo-500/30", "border-indigo-400", "text-indigo-100");
+  } else {
+    tabD.classList.add("bg-indigo-500/30", "border-indigo-400", "text-indigo-100");
+    tabR.classList.remove("bg-indigo-500/30", "border-indigo-400", "text-indigo-100");
+  }
+
+  renderCategorySelectByTipo(tipo);
+}
+
+document.getElementById("tabReceita").addEventListener("click", () => setTipo("RECEITA"));
+document.getElementById("tabDespesa").addEventListener("click", () => setTipo("DESPESA"));
 
 // ====== categorias ======
 function renderCategorySelectByTipo(tipo) {
@@ -79,7 +99,6 @@ async function carregarCategorias() {
     categoriesMap.set(c.id, `${c.nome} (${c.tipo})`);
   }
 
-  // Inicializa select de categoria de acordo com o tipo atual do form
   renderCategorySelectByTipo(document.getElementById("tipo").value);
 }
 
@@ -191,7 +210,6 @@ function renderPagination(pageData) {
   document.getElementById("prevBtn").disabled = number <= 0;
   document.getElementById("nextBtn").disabled = totalPages === 0 || number >= totalPages - 1;
 
-  // Botões numéricos (janela de 5 páginas)
   const pageBtns = document.getElementById("pageBtns");
   pageBtns.innerHTML = "";
 
@@ -253,12 +271,9 @@ async function criarTransacao() {
     return;
   }
 
-  // limpar
   document.getElementById("descricao").value = "";
   document.getElementById("valor").value = "";
   document.getElementById("data").value = "";
-  document.getElementById("tipo").value = "RECEITA";
-  renderCategorySelectByTipo("RECEITA");
 
   setMsg("");
   await carregarResumo();
@@ -319,8 +334,6 @@ async function criarCategoria() {
 
   closeCatModal();
   await carregarCategorias();
-
-  // deixa o select do form alinhado com o tipo atual
   renderCategorySelectByTipo(document.getElementById("tipo").value);
 }
 
@@ -344,7 +357,6 @@ function abrirModalEdicao(tx) {
   document.getElementById("editTipo").value = tx.tipo ?? "RECEITA";
 
   renderEditCategorySelectByTipo(document.getElementById("editTipo").value, tx.categoryId);
-
   openEditModal();
 }
 
@@ -399,10 +411,6 @@ document.getElementById("txForm").addEventListener("submit", (e) => {
   criarTransacao();
 });
 
-document.getElementById("tipo").addEventListener("change", () => {
-  renderCategorySelectByTipo(document.getElementById("tipo").value);
-});
-
 // filtro
 document.getElementById("btnFiltrar").addEventListener("click", () => {
   const inicio = document.getElementById("inicio").value;
@@ -450,6 +458,7 @@ document.getElementById("editTipo").addEventListener("change", () => {
 
 // ====== boot ======
 (async function init() {
+  setTipo("RECEITA");
   await carregarCategorias();
   await carregarResumo();
   await carregarTransacoes();
