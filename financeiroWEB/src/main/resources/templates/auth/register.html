@@ -1,53 +1,47 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-br">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Cadastro</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-    </head>
-    <body class="bg-slate-950 text-slate-100">
-        <div class="min-h-screen flex items-center justify-center p-4">
-            <div class="min-h-screen flex items-center justify-center p4">
-                <div class="w-full max-w-md space-y-4">
-                    <div class="space-y-1">
-                        <h1 class="text-3x1 sm:text-4xl font-bold">Criar
-                            Conta</h1>
-                        <p class="text-slate-400 text-sm sm:text-base">Preencha
-                            os dados para se cadastrar.</p>
-                    </div>
-                    <div id="err" class="hidden text-red-400 text-sm"></div>
-                    <div
-                        class="rounded-2xl bg-slate-900/60 border border-slate-800 p-5 sm:p-6 space-y-3">
-                        <input id="nome"
-                            class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3"
-                            placeholder="Nome completo" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Cadastro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/js/auth-register.js" defer></script>
+</head>
 
-                        <input id="email"
-                            class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3"
-                            placeholder="Email" type="email" />
+<body class="bg-slate-950 text-slate-100">
+  <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md space-y-4">
+      <div class="space-y-1">
+        <h1 class="text-3xl sm:text-4xl font-bold">Criar Conta</h1>
+        <p class="text-slate-400 text-sm sm:text-base">Preencha os dados para se cadastrar.</p>
+      </div>
 
-                        <input id="senha"
-                            class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3"
-                            placeholder="Senha" type="password" />
+      <div id="err" class="hidden text-red-400 text-sm"></div>
 
-                        <button id="btnRegister"
-                            class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3">Criar
-                            Conta
-                        </button>
+      <form id="registerForm" class="rounded-2xl bg-slate-900/60 border border-slate-800 p-5 sm:p-6 space-y-3">
+        <input id="nome"
+               class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3"
+               placeholder="Nome completo" />
 
-                        <div class="text-center text-sm text-slate-400">Já tem
-                            conta?
-                            <a href="/login"
-                                class="text-indigo-400 hover:text-indigo-300 font-semibold">Entrar</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <input id="email"
+               class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3"
+               placeholder="Email" type="email" />
+
+        <input id="senha"
+               class="w-full rounded-xl bg-slate-950 border border-slate-800 p-3"
+               placeholder="Senha" type="password" />
+
+        <button id="btnRegister"
+                class="w-full rounded-xl bg-indigo-500 hover:bg-indigo-400 transition p-3 font-semibold">
+          Criar Conta
+        </button>
+
+        <div class="text-center text-sm text-slate-400">
+          Já tem conta?
+          <a href="/login" class="text-indigo-400 hover:text-indigo-300 font-semibold">Entrar</a>
         </div>
-
-        <script
-            src="js/auth-register.js"></script>
-
-    </body>
+      </form>
+    </div>
+  </div>
+</body>
 </html>
