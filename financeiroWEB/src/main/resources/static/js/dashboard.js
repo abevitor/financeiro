@@ -529,29 +529,51 @@ function groupByCategory(transactions) {
 }
 
 async function carregarGraficos() {
-  // 1) Chart.js carregou?
   if (typeof Chart === "undefined") {
-    console.error("❌ Chart.js não está carregado. Adicione o script do Chart.js no HTML.");
+    console.error("❌ Chart.js não está carregado.");
     return;
   }
 
-  // 2) canvas existe?
   const canvasLinha = document.getElementById("chartLinha");
   const canvasCat = document.getElementById("chartCategoria");
   if (!canvasLinha || !canvasCat) {
-    console.error("❌ Canvas não encontrado (#chartLinha / #chartCategoria). Coloque os <canvas> no HTML.");
+    console.error("❌ Canvas não encontrado (#chartLinha / #chartCategoria).");
     return;
   }
 
   let inicio = document.getElementById("inicio")?.value ?? "";
   let fim = document.getElementById("fim")?.value ?? "";
 
-  if (!(usingPeriodo && inicio && fim)) {
-    fim = toISODate(new Date());
-    inicio = toISODate(subDays(DIAS_PADRAO));
+  // 1) Se estiver usando filtro, usa filtro
+  if (usingPeriodo && inicio && fim) {
+    const tx = await fetchAllTransactionsForPeriod(inicio, fim);
+    renderCharts(tx);
+    return;
   }
 
-  const tx = await fetchAllTransactionsForPeriod(inicio, fim);
+  // 2) Tenta últimos 30 dias a partir de HOJE
+  let fimAuto = toISODate(new Date());
+  let inicioAuto = toISODate(subDays(DIAS_PADRAO));
+  let tx = await fetchAllTransactionsForPeriod(inicioAuto, fimAuto);
+
+  // 3) Se vier vazio, pega a "última transação" e monta um range baseado nela
+  if (!tx.length) {
+    const res = await fetch(`/transactions?page=0&size=1&sort=data,desc`, { headers: authHeaders() });
+    if (res.ok) {
+      const pageData = await res.json();
+      const last = (pageData.content ?? [])[0];
+      if (last?.data) {
+        const lastDate = new Date(last.data + "T00:00:00");
+        fimAuto = toISODate(lastDate);
+        const start = new Date(lastDate);
+        start.setDate(start.getDate() - DIAS_PADRAO);
+        inicioAuto = toISODate(start);
+
+        tx = await fetchAllTransactionsForPeriod(inicioAuto, fimAuto);
+      }
+    }
+  }
+
   renderCharts(tx);
 }
 
