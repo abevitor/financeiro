@@ -7,34 +7,9 @@ function authHeaders(extra = {}) {
   return { ...extra, Authorization: "Bearer " + token };
 }
 
-async function fetchAllTransactionsForPeriod(inicio, fim) {
-
-  const url = `/transactions/periodo?inicio=${encodeURIComponent(inicio)}&fim=${encodeURIComponent(fim)}&page=0&size=500&sort=data,asc`;
-
-  const res = await fetch(url, { headers: authHeaders() });
-  if (!res.ok) return [];
-
-  const data = await res.json();
-  return data.content ?? [];
-}
-
 function moneyBR(v) {
   const n = Number(v ?? 0);
   return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function toISODate(d) {
-  // d: Date
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function subDays(n) {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return d;
 }
 
 function showError(id, msg) {
@@ -57,7 +32,6 @@ function setMsg(msg) {
   el.textContent = msg ?? "";
 }
 
-// helper p/ não quebrar tudo se algum id estiver faltando
 function on(id, event, handler) {
   const el = document.getElementById(id);
   if (!el) {
@@ -73,15 +47,28 @@ const size = 10;
 let usingPeriodo = false;
 
 let allCategories = [];
-// ====== charts ======
+const categoriesMap = new Map();
+let editTxId = null;
+
+// ====== charts state ======
 let chartLinha = null;
 let chartCategoria = null;
 
 // intervalo padrão do gráfico
-const DIAS_PADRAO = 30; 
-const categoriesMap = new Map(); 
+const DIAS_PADRAO = 30;
 
-let editTxId = null;
+function toISODate(d) {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function subDays(n) {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return d;
+}
 
 // ====== tabs tipo ======
 function setTipo(tipo) {
@@ -91,7 +78,6 @@ function setTipo(tipo) {
   const tabR = document.getElementById("tabReceita");
   const tabD = document.getElementById("tabDespesa");
 
-  // visual
   const activeCls = ["bg-indigo-500/30", "border-indigo-400", "text-indigo-100"];
 
   if (tabR && tabD) {
@@ -113,8 +99,8 @@ function renderCategorySelectByTipo(tipo) {
   if (!select) return;
 
   select.innerHTML = `<option value="">Selecione uma categoria</option>`;
-
   const filtered = allCategories.filter((c) => c.tipo === tipo);
+
   for (const c of filtered) {
     const opt = document.createElement("option");
     opt.value = c.id;
@@ -128,8 +114,8 @@ function renderEditCategorySelectByTipo(tipo, selectedId) {
   if (!select) return;
 
   select.innerHTML = `<option value="">Selecione uma categoria</option>`;
-
   const filtered = allCategories.filter((c) => c.tipo === tipo);
+
   for (const c of filtered) {
     const opt = document.createElement("option");
     opt.value = c.id;
@@ -150,11 +136,9 @@ async function carregarCategorias() {
 
   allCategories = await res.json();
   categoriesMap.clear();
-  for (const c of allCategories) {
-    categoriesMap.set(c.id, `${c.nome} (${c.tipo})`);
-  }
+  for (const c of allCategories) categoriesMap.set(c.id, `${c.nome} (${c.tipo})`);
 
-  const tipoAtual = (document.getElementById("tipo")?.value ?? "RECEITA");
+  const tipoAtual = document.getElementById("tipo")?.value ?? "RECEITA";
   renderCategorySelectByTipo(tipoAtual);
 }
 
@@ -166,15 +150,11 @@ async function carregarResumo() {
     window.location.href = "/login";
     return;
   }
+
   const data = await res.json();
-
-  const receitasEl = document.getElementById("receitas");
-  const despesasEl = document.getElementById("despesas");
-  const saldoEl = document.getElementById("saldo");
-
-  if (receitasEl) receitasEl.textContent = moneyBR(data.receitas);
-  if (despesasEl) despesasEl.textContent = moneyBR(data.despesas);
-  if (saldoEl) saldoEl.textContent = moneyBR(data.saldo);
+  document.getElementById("receitas").textContent = moneyBR(data.receitas);
+  document.getElementById("despesas").textContent = moneyBR(data.despesas);
+  document.getElementById("saldo").textContent = moneyBR(data.saldo);
 }
 
 // ====== transações ======
@@ -209,8 +189,8 @@ function renderTabela(pageData) {
   if (!tbody) return;
 
   tbody.innerHTML = "";
-
   const content = pageData.content ?? [];
+
   if (content.length === 0) {
     tbody.innerHTML = `
       <tr class="border-b border-slate-900">
@@ -223,13 +203,10 @@ function renderTabela(pageData) {
   for (const t of content) {
     const tipoColor = t.tipo === "RECEITA" ? "text-emerald-300" : "text-rose-300";
     const catLabel = categoriesMap.get(t.categoryId) ?? `#${t.categoryId}`;
+    const safeTx = encodeURIComponent(JSON.stringify(t));
 
     const tr = document.createElement("tr");
     tr.className = "border-b border-slate-900";
-
-    // evita quebrar HTML caso JSON tenha aspas
-    const safeTx = encodeURIComponent(JSON.stringify(t));
-
     tr.innerHTML = `
       <td class="py-3 pr-2 text-slate-300">${t.data ?? ""}</td>
       <td class="py-3 pr-2">${t.descricao ?? ""}</td>
@@ -237,14 +214,12 @@ function renderTabela(pageData) {
       <td class="py-3 pr-2 text-slate-200">${catLabel}</td>
       <td class="py-3 pr-2 text-right">${moneyBR(t.valor)}</td>
       <td class="py-3 text-right flex justify-end gap-2">
-        <button data-tx="${safeTx}"
-                type="button"
-                class="btnEdit rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 px-3 py-1 text-indigo-200">
+        <button data-tx="${safeTx}" type="button"
+          class="btnEdit rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/40 px-3 py-1 text-indigo-200">
           Editar
         </button>
-        <button data-id="${t.id}"
-                type="button"
-                class="btnDel rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 px-3 py-1 text-rose-200">
+        <button data-id="${t.id}" type="button"
+          class="btnDel rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 px-3 py-1 text-rose-200">
           Excluir
         </button>
       </td>
@@ -275,23 +250,14 @@ function renderPagination(pageData) {
   const totalPages = Number(pageData.totalPages ?? 0);
   const number = Number(pageData.number ?? 0);
 
-  const pageInfo = document.getElementById("pageInfo");
-  if (pageInfo) {
-    pageInfo.textContent =
-      totalPages === 0 ? "Página 0 de 0" : `Página ${number + 1} de ${totalPages}`;
-  }
+  document.getElementById("pageInfo").textContent =
+    totalPages === 0 ? "Página 0 de 0" : `Página ${number + 1} de ${totalPages}`;
 
-  const prevBtn = document.getElementById("prevBtn");
-  const nextBtn = document.getElementById("nextBtn");
-
-  if (prevBtn) prevBtn.disabled = number <= 0;
-  if (nextBtn) nextBtn.disabled = totalPages === 0 || number >= totalPages - 1;
+  document.getElementById("prevBtn").disabled = number <= 0;
+  document.getElementById("nextBtn").disabled = totalPages === 0 || number >= totalPages - 1;
 
   const pageBtns = document.getElementById("pageBtns");
-  if (!pageBtns) return;
-
   pageBtns.innerHTML = "";
-
   if (totalPages <= 1) return;
 
   const start = Math.max(0, number - 2);
@@ -352,12 +318,9 @@ async function criarTransacao() {
   }
 
   // limpar
-  const descEl = document.getElementById("descricao");
-  const valorEl = document.getElementById("valor");
-  const dataEl = document.getElementById("data");
-  if (descEl) descEl.value = "";
-  if (valorEl) valorEl.value = "";
-  if (dataEl) dataEl.value = "";
+  document.getElementById("descricao").value = "";
+  document.getElementById("valor").value = "";
+  document.getElementById("data").value = "";
 
   setMsg("");
   await carregarResumo();
@@ -390,18 +353,13 @@ async function deletarTransacao(id) {
 // ====== modal categoria ======
 function openCatModal() {
   clearError("catErr");
-  const nome = document.getElementById("catNome");
-  const tipo = document.getElementById("catTipo");
-  const modal = document.getElementById("catModal");
-
-  if (nome) nome.value = "";
-  if (tipo) tipo.value = "RECEITA";
-  if (modal) modal.classList.remove("hidden");
+  document.getElementById("catNome").value = "";
+  document.getElementById("catTipo").value = "RECEITA";
+  document.getElementById("catModal").classList.remove("hidden");
 }
 
 function closeCatModal() {
-  const modal = document.getElementById("catModal");
-  if (modal) modal.classList.add("hidden");
+  document.getElementById("catModal").classList.add("hidden");
 }
 
 async function criarCategoria() {
@@ -428,41 +386,35 @@ async function criarCategoria() {
 
   const tipoAtual = document.getElementById("tipo")?.value ?? "RECEITA";
   renderCategorySelectByTipo(tipoAtual);
+
+  await carregarGraficos();
 }
 
 // ====== modal editar ======
 function openEditModal() {
   clearError("editErr");
-  const modal = document.getElementById("editModal");
-  if (modal) modal.classList.remove("hidden");
+  document.getElementById("editModal").classList.remove("hidden");
 }
 
 function closeEditModal() {
-  const modal = document.getElementById("editModal");
-  if (modal) modal.classList.add("hidden");
+  document.getElementById("editModal").classList.add("hidden");
   editTxId = null;
 }
 
 function abrirModalEdicao(tx) {
   editTxId = tx.id;
 
-  const desc = document.getElementById("editDescricao");
-  const val = document.getElementById("editValor");
-  const dat = document.getElementById("editData");
-  const tip = document.getElementById("editTipo");
+  document.getElementById("editDescricao").value = tx.descricao ?? "";
+  document.getElementById("editValor").value = String(tx.valor ?? "").replace(",", ".");
+  document.getElementById("editData").value = tx.data ?? "";
+  document.getElementById("editTipo").value = tx.tipo ?? "RECEITA";
 
-  if (desc) desc.value = tx.descricao ?? "";
-  if (val) val.value = String(tx.valor ?? "").replace(",", ".");
-  if (dat) dat.value = tx.data ?? "";
-  if (tip) tip.value = tx.tipo ?? "RECEITA";
-
-  renderEditCategorySelectByTipo(document.getElementById("editTipo")?.value ?? "RECEITA", tx.categoryId);
+  renderEditCategorySelectByTipo(document.getElementById("editTipo").value, tx.categoryId);
   openEditModal();
 }
 
 async function salvarEdicao() {
   clearError("editErr");
-  await carregarGraficos();
 
   if (!editTxId) return showError("editErr", "Transação inválida.");
 
@@ -499,9 +451,167 @@ async function salvarEdicao() {
   closeEditModal();
   await carregarResumo();
   await carregarTransacoes();
+  await carregarGraficos();
 }
 
-// ====== binds (seguros) ======
+// ====== gráficos ======
+async function fetchAllTransactionsForPeriod(inicio, fim) {
+  const url = `/transactions/periodo?inicio=${encodeURIComponent(inicio)}&fim=${encodeURIComponent(fim)}&page=0&size=500&sort=data,asc`;
+  const res = await fetch(url, { headers: authHeaders() });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.content ?? [];
+}
+
+function groupByDate(transactions) {
+  const map = new Map();
+
+  for (const t of transactions) {
+    const day = t.data;
+    if (!day) continue;
+
+    if (!map.has(day)) map.set(day, { receitas: 0, despesas: 0 });
+
+    const item = map.get(day);
+    const valor = Number(t.valor ?? 0);
+
+    if (t.tipo === "RECEITA") item.receitas += valor;
+    else item.despesas += valor;
+  }
+
+  const dates = Array.from(map.keys()).sort();
+  const receitas = [];
+  const despesas = [];
+  const saldo = [];
+
+  let acum = 0;
+  for (const d of dates) {
+    const it = map.get(d);
+    receitas.push(it.receitas);
+    despesas.push(it.despesas);
+    acum += (it.receitas - it.despesas);
+    saldo.push(acum);
+  }
+
+  return { dates, receitas, despesas, saldo };
+}
+
+function groupByCategory(transactions) {
+  const map = new Map(); // categoryId -> total abs
+
+  for (const t of transactions) {
+    const id = t.categoryId ?? 0;
+    const valor = Math.abs(Number(t.valor ?? 0));
+    map.set(id, (map.get(id) ?? 0) + valor);
+  }
+
+  const entries = Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+
+  const labels = [];
+  const values = [];
+  let outros = 0;
+
+  entries.forEach(([id, total], idx) => {
+    if (idx < 8) {
+      labels.push(categoriesMap.get(id) ?? `Categoria #${id}`);
+      values.push(total);
+    } else {
+      outros += total;
+    }
+  });
+
+  if (outros > 0) {
+    labels.push("Outros");
+    values.push(outros);
+  }
+
+  return { labels, values };
+}
+
+async function carregarGraficos() {
+  // 1) Chart.js carregou?
+  if (typeof Chart === "undefined") {
+    console.error("❌ Chart.js não está carregado. Adicione o script do Chart.js no HTML.");
+    return;
+  }
+
+  // 2) canvas existe?
+  const canvasLinha = document.getElementById("chartLinha");
+  const canvasCat = document.getElementById("chartCategoria");
+  if (!canvasLinha || !canvasCat) {
+    console.error("❌ Canvas não encontrado (#chartLinha / #chartCategoria). Coloque os <canvas> no HTML.");
+    return;
+  }
+
+  let inicio = document.getElementById("inicio")?.value ?? "";
+  let fim = document.getElementById("fim")?.value ?? "";
+
+  if (!(usingPeriodo && inicio && fim)) {
+    fim = toISODate(new Date());
+    inicio = toISODate(subDays(DIAS_PADRAO));
+  }
+
+  const tx = await fetchAllTransactionsForPeriod(inicio, fim);
+  renderCharts(tx);
+}
+
+function renderCharts(transactions) {
+  const { dates, receitas, despesas, saldo } = groupByDate(transactions);
+  const { labels, values } = groupByCategory(transactions);
+
+  // se não tiver nada, ainda assim desenha gráfico "vazio" com 1 ponto
+  const finalDates = dates.length ? dates : ["—"];
+  const finalReceitas = receitas.length ? receitas : [0];
+  const finalDespesas = despesas.length ? despesas : [0];
+  const finalSaldo = saldo.length ? saldo : [0];
+
+  // ===== Linha =====
+  const ctxLinha = document.getElementById("chartLinha").getContext("2d");
+  if (chartLinha) chartLinha.destroy();
+
+  chartLinha = new Chart(ctxLinha, {
+    type: "line",
+    data: {
+      labels: finalDates,
+      datasets: [
+        { label: "Receitas", data: finalReceitas, tension: 0.3 },
+        { label: "Despesas", data: finalDespesas, tension: 0.3 },
+        { label: "Saldo (acumulado)", data: finalSaldo, tension: 0.3 },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: "#cbd5e1" } } },
+      scales: {
+        x: { ticks: { color: "#94a3b8" }, grid: { color: "rgba(148,163,184,0.12)" } },
+        y: { ticks: { color: "#94a3b8" }, grid: { color: "rgba(148,163,184,0.12)" } },
+      },
+    },
+  });
+
+  // ===== Doughnut =====
+  const ctxCat = document.getElementById("chartCategoria").getContext("2d");
+  if (chartCategoria) chartCategoria.destroy();
+
+  const finalLabels = labels.length ? labels : ["—"];
+  const finalValues = values.length ? values : [0];
+
+  chartCategoria = new Chart(ctxCat, {
+    type: "doughnut",
+    data: {
+      labels: finalLabels,
+      datasets: [{ label: "Total", data: finalValues }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: "#cbd5e1" } } },
+    },
+  });
+}
+
+// ====== binds ======
 on("logoutBtn", "click", () => {
   localStorage.removeItem("token");
   window.location.href = "/login";
@@ -524,11 +634,8 @@ on("btnFiltrar", "click", () => {
 });
 
 on("btnLimpar", "click", () => {
-  const i = document.getElementById("inicio");
-  const f = document.getElementById("fim");
-  if (i) i.value = "";
-  if (f) f.value = "";
-
+  document.getElementById("inicio").value = "";
+  document.getElementById("fim").value = "";
   usingPeriodo = false;
   page = 0;
   carregarTransacoes();
@@ -561,138 +668,9 @@ on("editTipo", "change", () => {
 on("tabReceita", "click", () => setTipo("RECEITA"));
 on("tabDespesa", "click", () => setTipo("DESPESA"));
 
-function groupByDate(transactions) {
-  // Map: date -> { receitas, despesas }
-  const map = new Map();
-
-  for (const t of transactions) {
-    const day = t.data; // "YYYY-MM-DD"
-    if (!map.has(day)) map.set(day, { receitas: 0, despesas: 0 });
-
-    const item = map.get(day);
-    const valor = Number(t.valor ?? 0);
-
-    if (t.tipo === "RECEITA") item.receitas += valor;
-    else item.despesas += valor;
-  }
-
-  // transforma em arrays ordenados
-  const dates = Array.from(map.keys()).sort();
-  const receitas = [];
-  const despesas = [];
-  const saldo = [];
-
-  let acum = 0;
-  for (const d of dates) {
-    const it = map.get(d);
-    receitas.push(it.receitas);
-    despesas.push(it.despesas);
-    acum += (it.receitas - it.despesas);
-    saldo.push(acum);
-  }
-
-  return { dates, receitas, despesas, saldo };
-}
-
-function groupByCategory(transactions) {
-  // soma absoluto por categoria (ex: receitas e despesas separadas ficaria outro gráfico, mas aqui soma por tipo atual)
-  const map = new Map(); // categoryId -> total
-  for (const t of transactions) {
-    const id = t.categoryId ?? 0;
-    const valor = Math.abs(Number(t.valor ?? 0));
-    map.set(id, (map.get(id) ?? 0) + valor);
-  }
-
-  // ordena e pega top 8 + "Outros"
-  const entries = Array.from(map.entries()).sort((a,b) => b[1] - a[1]);
-
-  const labels = [];
-  const values = [];
-  let outros = 0;
-
-  entries.forEach(([id, total], idx) => {
-    if (idx < 8) {
-      labels.push(categoriesMap.get(id) ?? `Categoria #${id}`);
-      values.push(total);
-    } else {
-      outros += total;
-    }
-  });
-
-  if (outros > 0) {
-    labels.push("Outros");
-    values.push(outros);
-  }
-
-  return { labels, values };
-}
-
-async function carregarGraficos() {
-  // se o usuário tiver usando filtro, usa filtro
-  let inicio = document.getElementById("inicio").value;
-  let fim = document.getElementById("fim").value;
-
-  // se não tiver filtro, usa últimos 30 dias
-  if (!(usingPeriodo && inicio && fim)) {
-    fim = toISODate(new Date());
-    inicio = toISODate(subDays(DIAS_PADRAO));
-  }
-
-  const tx = await fetchAllTransactionsForPeriod(inicio, fim);
-  renderCharts(tx);
-}
-
-function renderCharts(transactions) {
-  const { dates, receitas, despesas, saldo } = groupByDate(transactions);
-  const { labels, values } = groupByCategory(transactions);
-
-  // ===== Linha =====
-  const ctxLinha = document.getElementById("chartLinha");
-  if (chartLinha) chartLinha.destroy();
-
-  chartLinha = new Chart(ctxLinha, {
-    type: "line",
-    data: {
-      labels: dates,
-      datasets: [
-        { label: "Receitas", data: receitas, tension: 0.3 },
-        { label: "Despesas", data: despesas, tension: 0.3 },
-        { label: "Saldo (acumulado)", data: saldo, tension: 0.3 }
-      ]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { labels: { color: "#cbd5e1" } }
-      },
-      scales: {
-        x: { ticks: { color: "#94a3b8" }, grid: { color: "rgba(148,163,184,0.12)" } },
-        y: { ticks: { color: "#94a3b8" }, grid: { color: "rgba(148,163,184,0.12)" } }
-      }
-    }
-  });
-
-  // ===== Pizza =====
-  const ctxCat = document.getElementById("chartCategoria");
-  if (chartCategoria) chartCategoria.destroy();
-
-  chartCategoria = new Chart(ctxCat, {
-    type: "doughnut",
-    data: {
-      labels,
-      datasets: [{ label: "Total", data: values }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { labels: { color: "#cbd5e1" } }
-      }
-    }
-  });
-}
-
 // ====== boot ======
 (async function init() {
+  console.log("✅ init rodando");
   setTipo("RECEITA");
   await carregarCategorias();
   await carregarResumo();
